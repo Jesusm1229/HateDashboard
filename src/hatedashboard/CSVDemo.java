@@ -44,7 +44,7 @@ public class CSVDemo {
                    }
                    System.out.println();
                }
-                System.out.println(((lineCont/4)-1));            
+                System.out.println("lineas: "+((lineCont/4)-1));            
                
             }catch(Exception e){
                 System.out.println(e);

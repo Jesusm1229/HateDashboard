@@ -18,123 +18,69 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class Spark {
-    
-        public static ArrayList<String> listOfKeysAux;
-        public static ArrayList<Long> listOfValuesAux;
+
+        private static List<String> resultIdList;
+        private static List<String> resultTweetList;        
+        private static List<String> resultUserList; 
+        private static List<String> resultLocationStringList; 
         
-        public static List<Row> resultList;
-        public static List<Row> resultLocationList;
-        
-        public static List<String> duplicateList;
-        
-        public static ArrayList<String> tweetsCount;
-        
-        public static Map<String, Long> resultMapAux = new HashMap<>();
                 
+        public static List<String> tweetsCount;
+                        
         public Spark(){
             executeSpark();
         }
     
+        //Función para contar duplicados en lista
         public static void countDuplicate(List<Row> list){
             tweetsCount = new ArrayList<String> ();
             
             float totalP = totalPercentage(list) ;
             
             Set<Row> uniqueSet = new HashSet<Row>(list);
-            for (Row temp : uniqueSet) {
-                //System.out.println(temp + ": " + Collections.frequency(list, temp));
-                tweetsCount.add(temp + "++" + Collections.frequency(list, temp) + ","+ (Collections.frequency(list, temp)/totalP*100));
+            for (Row temp : uniqueSet) {                
+                tweetsCount.add(temp + "∥" + Collections.frequency(list, temp) + "∥"+ (Collections.frequency(list, temp)/totalP*100));
             }
         
         }
         
+        //Función para especificar el porcentaje con respecto a las "veces de aparición"
         public static float totalPercentage(List<Row> list){
             
-        Set<Row> uniqueSet = new HashSet<Row>(list);
-        float totalPer = 0;
-        
-            for (Row temp : uniqueSet) {
-                //System.out.println(temp + ": " + Collections.frequency(list, temp));
-                 totalPer = totalPer + Collections.frequency(list, temp);
-            }
-            return totalPer;
+            Set<Row> uniqueSet = new HashSet<Row>(list);
+            float totalPer = 0;
+
+                for (Row temp : uniqueSet) {               
+                     totalPer = totalPer + Collections.frequency(list, temp);
+                }
+                return totalPer;
         }
         
         
-        public static <String> Map<String, Long> countByClassicalLoop(List<String> inputList) {
-                Map<String, Long> resultMap = new HashMap<>();
-                for (String element : inputList) {
-                    if (resultMap.containsKey(element)) {
-                        resultMap.put(element, resultMap.get(element) + 1L);
-                    } else {
-                        resultMap.put(element, 1L);
-                    }
-                }           
+        
+        
+        public  List<String> getTweetsCount(){
+                return tweetsCount;        
+        }
+        
+         public  List<String> getresultIdList(){
+                return resultIdList;     
+        }
+        
+         public  List<String> getresultTweetList(){
+                return resultTweetList;     
+        }
          
-            getkeySet(resultMap);
-            
-            getValues(resultMap);
-                        
-            //resultMapAux = resultMap; 
-            
-            return resultMap;
+          public List<String> getresultUserList(){
+                return resultUserList;        
         }
-        
-        public static <String> ArrayList<String> getkeySet(Map<String, Long> inputMap){
-        
-            Set<String> keySet = inputMap.keySet();
-            // Creating an ArrayList of keys
-            // by passing the keySet
-            ArrayList<String> listOfKeys = new ArrayList<String>(keySet);
-
-            // Getting Collection of values from HashMap
-            Collection<Long> values = inputMap.values();
-
-            // Creating an ArrayList of values
-            ArrayList<Long> listOfValues  = new ArrayList<>(values);
-
-            //listOfKeysAux = listOfKeys;
-            
-            System.out.println("Los Keys del Map son: " + listOfKeys);
-                        
-            return listOfKeys;
+          
+          public  List<String> getresultLocationStringList(){
+                return resultLocationStringList;      
         }
-        
-        public static <String> ArrayList<Long> getValues(Map<String, Long> inputMap){
-        
-            Set<String> keySet = inputMap.keySet();
-            // Creating an ArrayList of keys
-            // by passing the keySet
-            ArrayList<String> listOfKeys
-                = new ArrayList<String>(keySet);
-
-            // Getting Collection of values from HashMap
-            Collection<Long> values = inputMap.values();
-
-            // Creating an ArrayList of values
-            ArrayList<Long> listOfValues
-                = new ArrayList<>(values);
-
-            listOfValuesAux = listOfValues;
-            
-            System.out.println("Los valores del Map son: " + listOfValues);
-            
-            return listOfValues;
-        }
-        
-        public static ArrayList<String> getTweetsCount(){
-            return tweetsCount;        
-        }
-        
-        public static ArrayList<String> getlistOfKeysAux(){        
-            return listOfKeysAux;
-        }
-        
-        public static ArrayList<Long> getlistOfValuessAux(){        
-            return listOfValuesAux;
-        }       
-        
-        
+         
+              
+       
         
         
 
@@ -184,44 +130,40 @@ public class Spark {
 		
 		//Se realiza el JOIN entre los Datasets (tablas) userTweets y offensiveFounded, y el resultado se almacena en un nuevo Dataset
 		
-                //Dataset Location
-                Dataset<Row> resultLocation = sc.sqlContext().sql("SELECT location FROM userTweets INNER JOIN offensiveFounded ON userTweets.id = offensiveFounded.id");
-		
+                
                 //Dataset completo
                 Dataset<Row> result = sc.sqlContext().sql("SELECT userTweets.id, text, location, username FROM userTweets INNER JOIN offensiveFounded ON userTweets.id = offensiveFounded.id");
-		
+		List<Row> resultList = result.collectAsList();
                 
-		//Se muestra el contenido del Dataset resultante
-		result.show(2505, false);
-		
-		//Almacenamos la tabla del resultado como un ArrayList
                 
-                //Resultado completo
-		resultList = result.collectAsList();
-		
-                //Resultado Location
-                resultLocationList = resultLocation.collectAsList(); 
+                //Dataset Id
+                Dataset<Row> resultId = sc.sqlContext().sql("SELECT userTweets.id FROM userTweets INNER JOIN offensiveFounded ON userTweets.id = offensiveFounded.id");
+                //List<Row> resultIdTextList = resultIdText.collectAsList();
+                resultIdList = resultId.as(Encoders.STRING()).collectAsList();
                 
+                //Dataset Text
+                Dataset<Row> resultText = sc.sqlContext().sql("SELECT text FROM userTweets INNER JOIN offensiveFounded ON userTweets.id = offensiveFounded.id");
+                //List<Row> resultIdTextList = resultIdText.collectAsList();
+                resultTweetList = resultText.as(Encoders.STRING()).collectAsList();
+                
+
+                //Dataset Location
+                Dataset<Row> resultLocation = sc.sqlContext().sql("SELECT location FROM userTweets INNER JOIN offensiveFounded ON userTweets.id = offensiveFounded.id");
+		List<Row> resultLocationList = resultLocation.collectAsList(); 
+                resultLocationStringList = resultLocation.as(Encoders.STRING()).collectAsList();
+                
+                 //Dataset Username
+                Dataset<Row> resultUser = sc.sqlContext().sql("SELECT username FROM userTweets INNER JOIN offensiveFounded ON userTweets.id = offensiveFounded.id");
+                //List<Row> resultUserList = resultUser.collectAsList();                
+                resultUserList = resultUser.as(Encoders.STRING()).collectAsList();
+                
+
+                //Se cuenta duplicados en lista de localización               
                 countDuplicate(resultLocationList);
-                
-                
-                
-//                //System.out.println("FIJATE ACÁAA"+getTweetsCount());
-//                 for (String str : getTweetsCount())
-//	      { 		      
-//	           System.out.println(str); 		
-//	      }
-                
-                //Se cuentan las iteraciones de cada ubicación
-                //System.out.println(countByClassicalLoop(resultList));
-                
-                //resultMapAux = countByClassicalLoop(resultList);
-                
-                //System.out.println("ACAAAAAAAA"+getlistOfValuessAux());
-                // System.out.println("Sin función"+listOfKeysAux);
-                //locationList(countByClassicalLoop(resultList));
-                
-		//Realizamos los procedimientos necesarios para almacenar los datos en un nuevo archivo csv
+                                
+         
+		//Realizamos los procedimientos necesarios para almacenar los datos en un nuevo archivo csv. 
+                //Este archivo se considera respaldo físico.
 		csvWriter = new CSV_Writer(resultList);
 		csvWriter.createFile();
 	}
